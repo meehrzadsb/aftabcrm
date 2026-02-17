@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Users DB - Aftab CRM</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1b33;
+      --text:#eaf0ff;
+      --muted:#a9b6d6;
+      --line:rgba(255,255,255,.08);
+      --primary:#4da3ff;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius:18px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --ok:#4ddc90;
+      --bad:#ff5c6c;
+    }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      background: radial-gradient(1200px 700px at 70% -10%, rgba(77,163,255,.25), transparent 60%),
+                  radial-gradient(900px 600px at 0% 0%, rgba(45,107,255,.18), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 22px;
+    }
+    .wrap{ max-width: 1300px; margin: 0 auto; }
+    .topbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      padding:16px 18px; border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: sticky; top: 10px; backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+    .title{ display:flex; flex-direction:column; gap:6px; }
+    .title h1{ margin:0; font-size:16px; letter-spacing:.3px; }
+    .title .sub{ color:var(--muted); font-size:12px; }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-size:13px;
+      display:inline-flex; gap:8px; align-items:center;
+      transition:.15s ease;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.09); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(77,163,255,.95), rgba(45,107,255,.95));
+      border-color: rgba(255,255,255,.12);
+      box-shadow: 0 10px 26px rgba(45,107,255,.22);
+    }
+    .btn.danger{ background: rgba(255,92,108,.14); border-color: rgba(255,92,108,.26); }
+    .btn.ok{ background: rgba(77,220,144,.12); border-color: rgba(77,220,144,.22); }
+    .btn.small{ padding:8px 10px; border-radius: 12px; font-size:12px; }
+    .card{
+      margin-top: 14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      border-radius: 18px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+    }
+    .tableWrap{ overflow:auto; }
+    table{ width:100%; border-collapse: collapse; min-width: 1180px; }
+    thead th{
+      text-align:right;
+      font-size:12px;
+      color: var(--muted);
+      font-weight:700;
+      padding:12px 12px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tbody td{
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      font-size:13px;
+      vertical-align: top;
+      word-break: break-word;
+    }
+    tbody tr:hover{ background: rgba(255,255,255,.03); }
+    .muted{ color: var(--muted); font-size:12px; }
+
+    .inp, .sel{
+      width: 100%;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding:9px 10px;
+      border-radius: 12px;
+      outline:none;
+      font-size: 12.5px;
+    }
+    .inp:focus, .sel:focus{ border-color: rgba(77,163,255,.55); box-shadow: 0 0 0 4px rgba(77,163,255,.12); }
+    .sel{ cursor:pointer; }
+    .sel option{ background: var(--panel); color: var(--text); }
+
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+    }
+    .ltr{ direction:ltr; text-align:left; unicode-bidi: plaintext; }
+
+    .rowActions{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-start;
+    }
+
+    .toast{
+      position:fixed; right:18px; bottom:18px;
+      background: rgba(15,27,51,.95);
+      border:1px solid var(--line);
+      color: var(--text);
+      padding:12px 14px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 60;
+      min-width: 240px;
+    }
+    .toast .t{ font-weight:900; font-size:13px; margin-bottom:4px;}
+    .toast .d{ color: var(--muted); font-size:12px; }
+
+    /* Audit Modal */
+    .modalOverlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.60);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index: 50;
+    }
+    .modal{
+      width: min(920px, 100%);
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15,27,51,.96), rgba(11,18,32,.96));
+      border-radius: 18px;
+      box-shadow: 0 26px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .modalHeader{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+    .modalHeader .mhTitle{ font-size:14px; font-weight:900; }
+    .modalBody{ padding:14px 16px 8px; }
+    .modalFooter{
+      display:flex; gap:10px; justify-content:flex-end; flex-wrap: wrap;
+      padding:12px 16px;
+      border-top:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <h1>Users DB (Server)</h1>
+        <div class="sub">مدیریت کاربران روی سرور </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnRefresh">🔄 بروزرسانی</button>
+        <button class="btn" id="btnExport">⬇️ خروجی CSV</button>
+        <button class="btn danger" id="btnReset">🧹 پاکسازی همه (به‌جز admin)</button>
+        <button class="btn danger" id="btnLogout">🚪 خروج</button>
+        <button class="btn primary" id="btnBack">↩️ بازگشت</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 110px;">Company</th>
+              <th style="width: 170px;">Username</th>
+              <th style="width: 200px;">Password</th>
+              <th style="width: 220px;">Full Name</th>
+              <th style="width: 130px;">Role</th>
+              <th style="width: 260px;">Email</th>
+              <th style="width: 220px;">Phone</th>
+              <th style="width: 170px;">Created</th>
+              <th style="width: 200px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Modal -->
+  <div class="modalOverlay" id="auditOverlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHeader">
+        <div class="mhTitle" id="auditTitle">تاریخچه ورود/خروج</div>
+        <button class="btn small" id="btnCloseAudit">✖️ بستن</button>
+      </div>
+      <div class="modalBody">
+        <div class="muted" id="auditMeta" style="margin-bottom:10px; line-height:1.8"></div>
+        <div style="border:1px solid var(--line); border-radius:14px; overflow:hidden; background: rgba(0,0,0,.18);">
+          <table style="width:100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:right; padding:10px 12px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--line);">زمان</th>
+                <th style="text-align:right; padding:10px 12px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--line);">نوع</th>
+                <th style="text-align:right; padding:10px 12px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--line);">پیام</th>
+                <th style="text-align:right; padding:10px 12px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--line);">Session</th>
+              </tr>
+            </thead>
+            <tbody id="auditTbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modalFooter">
+        <button class="btn" id="btnAuditCopy">📋 کپی لاگ‌ها</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="t" id="toastTitle"></div>
+    <div class="d" id="toastDesc"></div>
+  </div>
+
+  <!-- Shared Auth (SERVER MODE) -->
+  <script src="js/auth.js"></script>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const AUTH = window.ALG_AUTH;
+
+    function toast(title, desc){
+      $("toastTitle").textContent = title;
+      $("toastDesc").textContent = desc || "";
+      $("toast").style.display = "block";
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => $("toast").style.display = "none", 2600);
+    }
+
+    function fmt(iso){
+      if(!iso) return "—";
+      const d = new Date(iso);
+      return d.toLocaleString("fa-IR", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }
+
+    function normalizePhone(v){
+      let s = String(v ?? "").trim().replace(/\s+/g, "");
+      if(!s) return "";
+      if(s.endsWith("+") && !s.startsWith("+")) s = "+" + s.slice(0, -1);
+      if(!s.startsWith("+")) s = "+" + s;
+      s = "+" + s.slice(1).replace(/\D+/g, "");
+      return s;
+    }
+
+    function toCsv(rows){
+      const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const headers = ["company","username","passwordPlain","fullName","role","email","phone","createdAt"];
+      const lines = [headers.map(esc).join(",")];
+      for(const r of rows){
+        lines.push(headers.map(h => esc(r[h])).join(","));
+      }
+      return lines.join("\n");
+    }
+    function downloadText(filename, text){
+      const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+    }
+
+    function mkId(prefix, id){ return `${prefix}_${id}`; }
+
+    async function render(){
+      const tbody = $("tbody");
+      tbody.innerHTML = "";
+
+      let users = [];
+      try {
+        users = (await AUTH.authGetAllUsers()).sort((a,b) => (b.createdAt||"").localeCompare(a.createdAt||""));
+      } catch (e) {
+        console.error(e);
+        toast("خطا", "دسترسی ادمین یا اتصال به سرور مشکل دارد.");
+        return;
+      }
+
+      if(!users.length){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="9" style="padding:18px; color: var(--muted);">هیچ کاربری ثبت نشده است.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      for(const u of users){
+        const tr = document.createElement("tr");
+        const phoneVal = normalizePhone(u.phone || "");
+        const created = fmt(u.createdAt);
+
+        const esc = (s) => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+        tr.innerHTML = `
+          <td><b>${esc(u.company || "—")}</b></td>
+
+          <td>
+            <button class="btn small" style="padding:7px 10px" data-act="audit" data-username="${esc(u.username || "")}" data-company="${esc(u.company || "")}">
+              🕘 ${esc(u.username || "—")}
+            </button>
+            <div class="muted">ID: ${(u.id||"").slice(0,8)}...</div>
+          </td>
+
+          <td>
+            <input class="inp mono ltr" id="${mkId("pwd", u.id)}" value="${esc(u.passwordPlain || "")}" />
+          </td>
+
+          <td>
+            <input class="inp" id="${mkId("fn", u.id)}" value="${esc(u.fullName || "")}" />
+          </td>
+
+          <td>
+            <select class="sel" id="${mkId("role", u.id)}">
+              <option value="admin"${u.role==="admin"?" selected":""}>Admin</option>
+              <option value="staff"${u.role==="staff"?" selected":""}>Staff</option>
+              <option value="viewer"${u.role==="viewer"?" selected":""}>Viewer</option>
+            </select>
+          </td>
+
+          <td>
+            <input class="inp ltr" id="${mkId("email", u.id)}" value="${esc(u.email || "")}" />
+          </td>
+
+          <td>
+            <input class="inp mono ltr" id="${mkId("phone", u.id)}" value="${esc(phoneVal)}" placeholder="+989122071083" />
+          </td>
+
+          <td class="muted">${created}</td>
+
+          <td>
+            <div class="rowActions">
+              <button class="btn small ok" data-act="save" data-id="${u.id}">💾 ذخیره</button>
+              <button class="btn small danger" data-act="del" data-id="${u.id}">🗑 حذف</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    async function handleSave(id){
+      const passwordPlain = $(mkId("pwd", id)).value || "";
+      const fullName = ($(mkId("fn", id)).value || "").trim();
+      const role = $(mkId("role", id)).value || "staff";
+      const email = ($(mkId("email", id)).value || "").trim();
+      const phone = normalizePhone($(mkId("phone", id)).value || "");
+
+      if(!fullName || !email || !phone){
+        toast("خطا", "Full Name / Email / Phone نباید خالی باشد.");
+        return;
+      }
+
+      const payload = {
+        passwordPlain,
+        fullName,
+        role,
+        email,
+        phone,
+        isActive: true
+      };
+
+      await AUTH.adminUpdateUser(id, payload);
+      toast("ذخیره شد", "تغییرات اعمال شد.");
+      await render();
+    }
+
+    async function handleDelete(id){
+      const ok = confirm("این کاربر حذف شود؟");
+      if(!ok) return;
+      await AUTH.adminDeleteUser(id);
+      toast("حذف شد", "کاربر حذف شد.");
+      await render();
+    }
+
+    async function openAudit(company, username){
+      const overlay = $("auditOverlay");
+      const tbody = $("auditTbody");
+      tbody.innerHTML = "";
+
+      const logs = await AUTH.authGetLogsByCompanyUsername(company, username, 500);
+
+      $("auditTitle").textContent = `تاریخچه ورود/خروج: ${username}`;
+      $("auditMeta").textContent = `Company: ${company}  •  Total logs: ${logs.length}`;
+
+      if(!logs.length){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="4" style="padding:14px 12px; color: var(--muted);">هیچ لاگی ثبت نشده است.</td>`;
+        tbody.appendChild(tr);
+      } else {
+        for(const l of logs){
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="padding:10px 12px; border-bottom:1px solid var(--line);" class="muted">${fmt(l.createdAt)}</td>
+            <td style="padding:10px 12px; border-bottom:1px solid var(--line);"><b>${(l.type||"—")}</b></td>
+            <td style="padding:10px 12px; border-bottom:1px solid var(--line);" class="muted">${(l.message||"")}</td>
+            <td style="padding:10px 12px; border-bottom:1px solid var(--line);" class="muted mono ltr">${(l.sessionToken||"")}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+
+      overlay.style.display = "flex";
+      document.body.style.overflow = "hidden";
+
+      $("btnAuditCopy").onclick = async () => {
+        const text = logs.map(x => `${x.createdAt} | ${x.type} | ${x.message} | ${x.sessionToken}`).join("\n");
+        await navigator.clipboard.writeText(text || "");
+        toast("کپی شد", "لاگ‌ها کپی شدند.");
+      };
+    }
+
+    function closeAudit(){
+      $("auditOverlay").style.display = "none";
+      document.body.style.overflow = "";
+    }
+
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-act]");
+      if(!btn) return;
+
+      const act = btn.getAttribute("data-act");
+      const id = btn.getAttribute("data-id");
+
+      try{
+        if(act === "save") await handleSave(id);
+        if(act === "del") await handleDelete(id);
+        if(act === "audit"){
+          const company = btn.getAttribute("data-company") || "";
+          const username = (btn.getAttribute("data-username") || "").toLowerCase();
+          await openAudit(company, username);
+        }
+      } catch(err){
+        console.error(err);
+        toast("خطا", err?.message || "عملیات ناموفق بود.");
+      }
+    });
+
+    $("btnRefresh").addEventListener("click", async () => { await render(); toast("بروزرسانی شد"); });
+
+    $("btnExport").addEventListener("click", async () => {
+      const users = await AUTH.authGetAllUsers();
+      downloadText(`users_export_${new Date().getFullYear()}.csv`, toCsv(users));
+      toast("خروجی آماده شد", "CSV دانلود شد.");
+    });
+
+    $("btnReset").addEventListener("click", async () => {
+      const ok = confirm("تمام کاربران (به‌جز admin) حذف می‌شوند. مطمئنید؟");
+      if(!ok) return;
+      await AUTH.adminClearUsers();
+      await render();
+      toast("پاکسازی شد", "همه کاربران (به‌جز admin) حذف شدند.");
+    });
+
+    $("btnLogout").addEventListener("click", async () => {
+      try{ await AUTH.authLogout(); } catch(_){}
+      localStorage.removeItem("alg_session_company");
+      localStorage.removeItem("alg_session_username");
+      localStorage.removeItem("alg_session_role");
+      window.location.href = "login.html";
+    });
+
+    $("btnBack").addEventListener("click", () => {
+      window.location.href = "login.html";
+    });
+
+    $("btnCloseAudit").addEventListener("click", closeAudit);
+    $("auditOverlay").addEventListener("click", (e) => { if(e.target.id === "auditOverlay") closeAudit(); });
+
+    window.addEventListener("keydown", (e) => {
+      if(e.key === "Escape"){
+        if($("auditOverlay").style.display === "flex") closeAudit();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

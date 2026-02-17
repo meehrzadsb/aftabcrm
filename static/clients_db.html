@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Client Database - Aftab Legal Group</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1b33;
+      --panel2:#0d1730;
+      --text:#eaf0ff;
+      --muted:#a9b6d6;
+      --line:rgba(255,255,255,.08);
+      --primary:#4da3ff;
+      --primary2:#2d6bff;
+      --ok:#2bd576;
+      --warn:#ffcc66;
+      --bad:#ff5c6c;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius2:14px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      background: radial-gradient(1200px 700px at 70% -10%, rgba(77,163,255,.25), transparent 60%),
+                  radial-gradient(900px 600px at 0% 0%, rgba(45,107,255,.18), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .wrap{ max-width:1200px; margin:28px auto; padding:0 16px 50px; }
+    .topbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      padding:16px 18px; border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: sticky; top: 10px; backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+    .title{ display:flex; flex-direction:column; gap:6px; }
+    .title h1{ margin:0; font-size:18px; letter-spacing:.3px; }
+    .title .sub{ color:var(--muted); font-size:12px; }
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap: wrap; justify-content:flex-end;}
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-size:13px;
+      display:inline-flex; gap:8px; align-items:center;
+      transition: .15s ease;
+      user-select: none;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.09); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(77,163,255,.95), rgba(45,107,255,.95));
+      border-color: rgba(255,255,255,.12);
+      box-shadow: 0 10px 26px rgba(45,107,255,.22);
+    }
+    .btn.primary:hover{ filter: brightness(1.05); }
+    .btn.danger{ background: rgba(255,92,108,.12); border-color: rgba(255,92,108,.22); }
+    .btn.ok{ background: rgba(43,213,118,.12); border-color: rgba(43,213,118,.22); }
+    .btn.small{ padding:8px 10px; border-radius: 12px; font-size:12px; }
+
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: 1.2fr .9fr .9fr 1fr;
+      margin-top:14px;
+    }
+    .card{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .card h3{ margin:0 0 10px; font-size:13px; color: var(--muted); font-weight:600;}
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap: wrap;}
+    .field{
+      width: 100%;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      outline: none;
+      font-size:13px;
+    }
+    .field:focus{ border-color: rgba(77,163,255,.55); box-shadow: 0 0 0 4px rgba(77,163,255,.12); }
+    select.field{ cursor:pointer; }
+    .tableWrap{
+      margin-top:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      border-radius: 18px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+    }
+    table{ width:100%; border-collapse: collapse; }
+    thead th{
+      text-align:right;
+      font-size:12px;
+      color: var(--muted);
+      font-weight:600;
+      padding:12px 12px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      position: sticky; top: 86px; z-index: 3; backdrop-filter: blur(8px);
+    }
+    tbody td{
+      padding:12px 12px;
+      border-bottom:1px solid var(--line);
+      font-size:13px;
+      vertical-align: top;
+    }
+    tbody tr:hover{ background: rgba(255,255,255,.03); }
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      font-size:12px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .tag.ok{ border-color: rgba(43,213,118,.30); background: rgba(43,213,118,.10); }
+    .tag.warn{ border-color: rgba(255,204,102,.30); background: rgba(255,204,102,.10); }
+    .tag.bad{ border-color: rgba(255,92,108,.30); background: rgba(255,92,108,.10); }
+    .muted{ color: var(--muted); font-size:12px; }
+    .nowrap{ white-space: nowrap; }
+    .cell-actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-start; }
+    .kpi{
+      display:flex; flex-direction:column; gap:6px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding:12px;
+    }
+    .kpi .v{ font-size:18px; font-weight:700; }
+    .kpi .l{ font-size:12px; color: var(--muted); }
+    .kpis{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      thead th{ top: 126px; }
+      .kpis{ grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .modalOverlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.60);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index: 50;
+    }
+    .modal{
+      width: min(880px, 100%);
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15,27,51,.96), rgba(13,23,48,.96));
+      border-radius: 18px;
+      box-shadow: 0 26px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .modalHeader{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+    .modalHeader .mhTitle{ font-size:14px; font-weight:700; }
+    .modalBody{ padding:14px 16px 4px; }
+    .formGrid{
+      display:grid; gap:10px;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .formRow{ display:flex; flex-direction:column; gap:6px; }
+    .label{ color: var(--muted); font-size:12px; }
+    textarea.field{ min-height: 90px; resize: vertical; }
+    .modalFooter{
+      display:flex; gap:10px; justify-content:flex-end; flex-wrap: wrap;
+      padding:12px 16px;
+      border-top:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+    @media (max-width: 980px){
+      .formGrid{ grid-template-columns: 1fr; }
+    }
+    .hint{ margin:10px 0 0; color: var(--muted); font-size:12px; line-height:1.7; }
+    .toast{
+      position:fixed; right:18px; bottom:18px;
+      background: rgba(15,27,51,.95);
+      border:1px solid var(--line);
+      color: var(--text);
+      padding:12px 14px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 60;
+      min-width: 240px;
+    }
+    .toast .t{ font-weight:700; font-size:13px; margin-bottom:4px;}
+    .toast .d{ color: var(--muted); font-size:12px; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <h1>Client Database</h1>
+        <div class="sub">نسخه MVP (IndexedDB) — دیتابیس خام است و فقط با ثبت شما پر می‌شود.</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnExport">⬇️ خروجی CSV</button>
+        <button class="btn danger" id="btnReset">🧹 پاکسازی دیتابیس</button>
+        <button class="btn" id="btnLogout">🚪 خروج</button>
+        <button class="btn primary" id="btnNew">➕ ثبت کلاینت جدید</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>فیلترها</h3>
+        <div class="row">
+          <select class="field" id="filterRequestType"></select>
+          <select class="field" id="filterCountry"></select>
+          <select class="field" id="filterStatus"></select>
+          <select class="field" id="filterAssignee"></select>
+          <input class="field" id="filterSearch" placeholder="جستجو: نام، پاسپورت، تلفن، ایمیل، کد داخلی..." />
+        </div>
+        <p class="hint">پیشنهاد برای گسترش: فیلتر «بازه تاریخ»، «برچسب‌ها»، و «مرحله پرونده».</p>
+      </div>
+
+      <div class="card">
+        <h3>آمار سریع</h3>
+        <div class="kpis">
+          <div class="kpi"><div class="v" id="kpiTotal">0</div><div class="l">کل کلاینت‌ها</div></div>
+          <div class="kpi"><div class="v" id="kpiActive">0</div><div class="l">فعال</div></div>
+          <div class="kpi"><div class="v" id="kpiLead">0</div><div class="l">لید</div></div>
+          <div class="kpi"><div class="v" id="kpiSubmitted">0</div><div class="l">ثبت/سابمیت‌شده</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>یادآوری طراحی (اتصال آینده)</h3>
+        <div class="muted" style="line-height:1.8">
+          • هر کلاینت یک <b>client_id</b> دارد.<br/>
+          • چک‌لیست و فرم اطلاعات فردی با همین ID لینک می‌شوند.<br/>
+          • دکمه‌های «چک‌لیست» و «اطلاعات فردی» الان لینک نمونه می‌زنند.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>ایده خفن آماده توسعه</h3>
+        <div class="muted" style="line-height:1.8">
+          • Pipeline کانبان • Timeline • Versioning • Archive
+        </div>
+      </div>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 180px;">کد داخلی</th>
+            <th>نام</th>
+            <th style="width: 220px;">نوع درخواست</th>
+            <th style="width: 130px;">کشور</th>
+            <th style="width: 150px;">وضعیت</th>
+            <th style="width: 150px;">مسئول</th>
+            <th style="width: 160px;">آخرین آپدیت</th>
+            <th style="width: 330px;">اکشن‌ها</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHeader">
+        <div class="mhTitle" id="modalTitle">ثبت کلاینت جدید</div>
+        <button class="btn small" id="btnClose">✖️ بستن</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="formGrid">
+          <div class="formRow">
+            <div class="label">نام *</div>
+            <input class="field" id="fFirstName" />
+          </div>
+          <div class="formRow">
+            <div class="label">نام خانوادگی *</div>
+            <input class="field" id="fLastName" />
+          </div>
+          <div class="formRow">
+            <div class="label">تلفن *</div>
+            <input class="field" id="fPhone" placeholder="مثال: +98912..." />
+          </div>
+
+          <div class="formRow">
+            <div class="label">ایمیل</div>
+            <input class="field" id="fEmail" placeholder="اختیاری" />
+          </div>
+          <div class="formRow">
+            <div class="label">شماره پاسپورت</div>
+            <input class="field" id="fPassport" placeholder="اختیاری" />
+          </div>
+          <div class="formRow">
+            <div class="label">تاریخ تولد</div>
+            <input class="field" id="fDob" placeholder="YYYY-MM-DD (اختیاری)" />
+          </div>
+
+          <div class="formRow">
+            <div class="label">نوع درخواست *</div>
+            <select class="field" id="fRequestType"></select>
+          </div>
+          <div class="formRow">
+            <div class="label">کشور محل درخواست *</div>
+            <select class="field" id="fCountry"></select>
+          </div>
+          <div class="formRow">
+            <div class="label">وضعیت *</div>
+            <select class="field" id="fStatus"></select>
+          </div>
+
+          <div class="formRow">
+            <div class="label">مسئول پرونده</div>
+            <select class="field" id="fAssignee"></select>
+          </div>
+          <div class="formRow">
+            <div class="label">تعداد همراهان</div>
+            <input class="field" id="fDependents" type="number" min="0" placeholder="اختیاری" />
+          </div>
+          <div class="formRow">
+            <div class="label">برچسب‌ها (با کاما جدا کنید)</div>
+            <input class="field" id="fTags" placeholder="مثال: VIP, فوری, استانبول" />
+          </div>
+
+          <div class="formRow" style="grid-column: 1 / -1;">
+            <div class="label">یادداشت</div>
+            <textarea class="field" id="fNotes" placeholder="اختیاری"></textarea>
+          </div>
+
+          <div class="formRow" style="grid-column: 1 / -1;">
+            <div class="label">لینک پوشه پرونده</div>
+            <input class="field" id="fFolderLink" placeholder="اختیاری" />
+          </div>
+        </div>
+
+        <p class="hint">بعداً می‌تونیم این فرم رو دو مرحله‌ای کنیم: (۱) اطلاعات پایه (۲) ساخت خودکار چک‌لیست/پروفایل.</p>
+      </div>
+
+      <div class="modalFooter">
+        <button class="btn" id="btnSaveOpen">💾 ذخیره و باز کردن پرونده</button>
+        <button class="btn primary" id="btnSave">💾 ذخیره</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="t" id="toastTitle"></div>
+    <div class="d" id="toastDesc"></div>
+  </div>
+
+
+
+<script src="js/auth.js"></script>
+<script>
+const REQUEST_TYPES = [
+  { value: "ALL", label: "همه" },
+  { value: "NLV", label: "اقامت تمکن مالی" },
+  { value: "DN_CONSULATE", label: "اقامت دیجیتال نومد از سفارت" },
+  { value: "DN_UGE", label: "اقامت دیجیتال نومد از اداره مهاجرت (اسپانیا)" },
+  { value: "SELF_EMP", label: "اقامت خود اشتغالی" },
+  { value: "STUDENT", label: "اقامت تحصیلی" },
+  { value: "TOURIST", label: "ویزای توریستی" },
+];
+
+const COUNTRIES = [
+  { value: "ALL", label: "همه" },
+  { value: "SPAIN", label: "اسپانیا" },
+  { value: "IRAN", label: "ایران" },
+  { value: "TURKEY", label: "ترکیه" },
+  { value: "UAE", label: "امارات" },
+  { value: "IRAQ", label: "عراق" },
+  { value: "OTHER", label: "سایر" },
+];
+
+const STATUSES = [
+  { value: "ALL", label: "همه وضعیت‌ها" },
+  { value: "LEAD", label: "لید" },
+  { value: "PREP", label: "درحال آماده‌سازی" },
+  { value: "APPOINTMENT", label: "وقت گرفته‌شده" },
+  { value: "SUBMITTED", label: "ثبت/سابمیت‌شده" },
+  { value: "DEFICIENCY", label: "نقص مدارک" },
+  { value: "APPROVED", label: "تایید" },
+  { value: "REJECTED", label: "رد" },
+  { value: "CANCELLED", label: "کنسل" },
+  { value: "ARCHIVED", label: "آرشیو" },
+];
+
+const ASSIGNEES = [
+  { value: "ALL", label: "همه مسئول‌ها" },
+  { value: "MEHRZAD", label: "Mehrzad" },
+  { value: "BAHAREH", label: "Bahareh" },
+  { value: "SAMIRA", label: "Samira" },
+  { value: "HESAM", label: "Hesam" },
+  { value: "IRFAN", label: "Irfan" },
+  { value: "NONE", label: "بدون مسئول" },
+];
+
+const DB_NAME = "aftab_clients_db";
+const DB_VERSION = 1;
+const STORE = "clients";
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)){
+        const store = db.createObjectStore(STORE, { keyPath: "id" });
+        store.createIndex("internalCode", "internalCode", { unique: true });
+        store.createIndex("lastUpdatedAt", "updatedAt", { unique: false });
+        store.createIndex("requestType", "requestType", { unique: false });
+        store.createIndex("country", "country", { unique: false });
+        store.createIndex("status", "status", { unique: false });
+        store.createIndex("assignee", "assignee", { unique: false });
+        store.createIndex("archived", "archived", { unique: false });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+  });
+}
+
+async function dbGetAll(){
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, "readonly");
+    const store = tx.objectStore(STORE);
+    const req = store.getAll();
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result || []);
+  });
+}
+
+async function dbPut(client){
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+    tx.objectStore(STORE).put(client);
+  });
+}
+
+async function dbDeleteAll(){
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    const store = tx.objectStore(STORE);
+    const req = store.clear();
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(true);
+  });
+}
+
+const $ = (id) => document.getElementById(id);
+
+function uuid(){
+  return crypto.randomUUID ? crypto.randomUUID() : "id-" + Math.random().toString(16).slice(2) + Date.now();
+}
+function nowISO(){ return new Date().toISOString(); }
+function fmtDate(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleString("fa-IR", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+}
+function mapLabel(arr, value){
+  const found = arr.find(x => x.value === value);
+  return found ? found.label : value;
+}
+function statusTagClass(status){
+  if (status === "APPROVED") return "ok";
+  if (status === "DEFICIENCY" || status === "APPOINTMENT") return "warn";
+  if (status === "REJECTED" || status === "CANCELLED") return "bad";
+  return "";
+}
+function toast(title, desc){
+  $("toastTitle").textContent = title;
+  $("toastDesc").textContent = desc || "";
+  $("toast").style.display = "block";
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => $("toast").style.display = "none", 2400);
+}
+function sanitize(str){ return (str || "").toString().trim(); }
+function makeInternalCode(seq){
+  const year = new Date().getFullYear();
+  return `ALG-${year}-${String(seq).padStart(6,"0")}`;
+}
+function toCsv(rows){
+  const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const headers = ["internalCode","firstName","lastName","phone","email","passportNo","requestType","country","status","assignee","updatedAt","createdAt","tags","notes","folderLink","dependents"];
+  const lines = [headers.map(esc).join(",")];
+  for(const r of rows){
+    lines.push(headers.map(h => esc(r[h])).join(","));
+  }
+  return lines.join("\n");
+}
+function downloadText(filename, text){
+  const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+}
+
+let allClients = [];
+let editingId = null;
+
+function fillSelect(el, options){
+  el.innerHTML = "";
+  for (const opt of options){
+    const o = document.createElement("option");
+    o.value = opt.value;
+    o.textContent = opt.label;
+    el.appendChild(o);
+  }
+}
+
+function setupFilters(){
+  fillSelect($("filterRequestType"), REQUEST_TYPES);
+  fillSelect($("filterCountry"), COUNTRIES);
+  fillSelect($("filterStatus"), STATUSES);
+  fillSelect($("filterAssignee"), ASSIGNEES);
+
+  $("filterRequestType").value = "ALL";
+  $("filterCountry").value = "ALL";
+  $("filterStatus").value = "ALL";
+  $("filterAssignee").value = "ALL";
+
+  const rerender = () => renderTable();
+  ["filterRequestType","filterCountry","filterStatus","filterAssignee"].forEach(id => $(id).addEventListener("change", rerender));
+  $("filterSearch").addEventListener("input", rerender);
+}
+
+function setupFormSelects(){
+  fillSelect($("fRequestType"), REQUEST_TYPES.filter(x => x.value !== "ALL"));
+  fillSelect($("fCountry"), COUNTRIES.filter(x => x.value !== "ALL"));
+  fillSelect($("fStatus"), STATUSES.filter(x => x.value !== "ALL"));
+  fillSelect($("fAssignee"), ASSIGNEES.filter(x => x.value !== "ALL"));
+  $("fAssignee").value = "NONE";
+  $("fStatus").value = "LEAD";
+}
+
+function openModal(mode){
+  $("modalOverlay").style.display = "flex";
+  document.body.style.overflow = "hidden";
+  if (mode === "new"){
+    $("modalTitle").textContent = "ثبت کلاینت جدید";
+    editingId = null;
+    clearForm();
+  }
+}
+function closeModal(){
+  $("modalOverlay").style.display = "none";
+  document.body.style.overflow = "";
+}
+function clearForm(){
+  ["fFirstName","fLastName","fPhone","fEmail","fPassport","fDob","fDependents","fTags","fNotes","fFolderLink"].forEach(id => $(id).value = "");
+  $("fRequestType").value = "NLV";
+  $("fCountry").value = "SPAIN";
+  $("fStatus").value = "LEAD";
+  $("fAssignee").value = "NONE";
+}
+function setForm(client){
+  $("fFirstName").value = client.firstName || "";
+  $("fLastName").value = client.lastName || "";
+  $("fPhone").value = client.phone || "";
+  $("fEmail").value = client.email || "";
+  $("fPassport").value = client.passportNo || "";
+  $("fDob").value = client.dob || "";
+  $("fRequestType").value = client.requestType || "NLV";
+  $("fCountry").value = client.country || "SPAIN";
+  $("fStatus").value = client.status || "LEAD";
+  $("fAssignee").value = client.assignee || "NONE";
+  $("fDependents").value = (client.dependents ?? "");
+  $("fTags").value = (client.tags || []).join(", ");
+  $("fNotes").value = client.notes || "";
+  $("fFolderLink").value = client.folderLink || "";
+}
+function getForm(){
+  const firstName = sanitize($("fFirstName").value);
+  const lastName = sanitize($("fLastName").value);
+  const phone = sanitize($("fPhone").value);
+  const email = sanitize($("fEmail").value);
+  const passportNo = sanitize($("fPassport").value);
+  const dob = sanitize($("fDob").value);
+  const requestType = $("fRequestType").value;
+  const country = $("fCountry").value;
+  const status = $("fStatus").value;
+  const assignee = $("fAssignee").value;
+  const dependents = $("fDependents").value === "" ? null : Number($("fDependents").value);
+  const tags = sanitize($("fTags").value).split(",").map(x => x.trim()).filter(Boolean);
+  const notes = sanitize($("fNotes").value);
+  const folderLink = sanitize($("fFolderLink").value);
+  return { firstName, lastName, phone, email, passportNo, dob, requestType, country, status, assignee, dependents, tags, notes, folderLink };
+}
+function validateForm(data){
+  if (!data.firstName) return "نام الزامی است.";
+  if (!data.lastName) return "نام خانوادگی الزامی است.";
+  if (!data.phone) return "تلفن الزامی است.";
+  if (!data.requestType) return "نوع درخواست الزامی است.";
+  if (!data.country) return "کشور محل درخواست الزامی است.";
+  if (!data.status) return "وضعیت الزامی است.";
+  return null;
+}
+
+function matchesFilters(client){
+  const ft = $("filterRequestType").value;
+  const fc = $("filterCountry").value;
+  const fs = $("filterStatus").value;
+  const fa = $("filterAssignee").value;
+  const q = sanitize($("filterSearch").value).toLowerCase();
+
+  if (fs === "ARCHIVED"){
+    if (!client.archived) return false;
+  } else {
+    if (client.archived) return false;
+  }
+  if (ft !== "ALL" && client.requestType !== ft) return false;
+  if (fc !== "ALL" && client.country !== fc) return false;
+  if (fs !== "ALL" && fs !== "ARCHIVED" && client.status !== fs) return false;
+  if (fa !== "ALL"){
+    if (fa === "NONE" && client.assignee !== "NONE") return false;
+    if (fa !== "NONE" && client.assignee !== fa) return false;
+  }
+  if (q){
+    const hay = [
+      client.internalCode, client.firstName, client.lastName,
+      client.phone, client.email, client.passportNo,
+      mapLabel(REQUEST_TYPES, client.requestType),
+      mapLabel(COUNTRIES, client.country),
+      mapLabel(STATUSES, client.status),
+      mapLabel(ASSIGNEES, client.assignee),
+      (client.tags || []).join(" "),
+      client.notes
+    ].join(" ").toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+function renderKPIs(){
+  const total = allClients.length;
+  const active = allClients.filter(c => !c.archived).length;
+  const lead = allClients.filter(c => !c.archived && c.status === "LEAD").length;
+  const submitted = allClients.filter(c => !c.archived && c.status === "SUBMITTED").length;
+  $("kpiTotal").textContent = total;
+  $("kpiActive").textContent = active;
+  $("kpiLead").textContent = lead;
+  $("kpiSubmitted").textContent = submitted;
+}
+
+function renderTable(){
+  renderKPIs();
+  const tbody = $("tbody");
+  tbody.innerHTML = "";
+  const rows = allClients.filter(matchesFilters).sort((a,b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+  if (!rows.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="8" style="padding:18px; color: var(--muted);">هیچ موردی یافت نشد.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+  for(const c of rows){
+    const tr = document.createElement("tr");
+    const fullName = `${c.firstName || ""} ${c.lastName || ""}`.trim();
+    const reqLabel = mapLabel(REQUEST_TYPES, c.requestType);
+    const countryLabel = mapLabel(COUNTRIES, c.country);
+    const statusLabel = mapLabel(STATUSES, c.status);
+    const assigneeLabel = mapLabel(ASSIGNEES, c.assignee);
+    const tagClass = statusTagClass(c.status);
+
+    tr.innerHTML = `
+      <td class="nowrap">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div><b>${c.internalCode || "—"}</b></div>
+          <div class="muted">ID: ${c.id.slice(0,8)}...</div>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div><b>${fullName || "—"}</b></div>
+          <div class="muted">${c.phone || "—"} ${c.email ? " • " + c.email : ""}</div>
+          <div class="muted">${c.passportNo ? "پاسپورت: " + c.passportNo : ""}</div>
+        </div>
+      </td>
+      <td>${reqLabel}</td>
+      <td>${countryLabel}</td>
+      <td>
+        <span class="tag ${tagClass}">${statusLabel}</span>
+        ${c.archived ? `<span class="tag bad" style="margin-inline-start:6px;">آرشیو</span>` : ""}
+      </td>
+      <td>${assigneeLabel}</td>
+      <td class="nowrap">${fmtDate(c.updatedAt)}</td>
+      <td>
+        <div class="cell-actions">
+          <button class="btn small ok" data-act="open" data-id="${c.id}">📄 پرونده</button>
+          <button class="btn small" data-act="checklist" data-id="${c.id}">✅ چک‌لیست</button>
+          <button class="btn small" data-act="profile" data-id="${c.id}">👤 اطلاعات فردی</button>
+          <button class="btn small" data-act="edit" data-id="${c.id}">✏️ ویرایش</button>
+          ${
+            c.archived
+              ? `<button class="btn small" data-act="unarchive" data-id="${c.id}">♻️ بازگردانی</button>`
+              : `<button class="btn small danger" data-act="archive" data-id="${c.id}">🗄️ آرشیو</button>`
+          }
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function bindTableActions(){
+  $("tbody").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button");
+    if(!btn) return;
+    const act = btn.dataset.act;
+    const id = btn.dataset.id;
+    const client = allClients.find(x => x.id === id);
+    if(!client) return;
+
+    if (act === "edit"){
+      editingId = id;
+      $("modalTitle").textContent = `ویرایش کلاینت (${client.internalCode})`;
+      setForm(client);
+      $("modalOverlay").style.display = "flex";
+      document.body.style.overflow = "hidden";
+      return;
+    }
+    if (act === "archive"){
+      client.archived = true;
+      client.updatedAt = nowISO();
+      await dbPut(client);
+      toast("آرشیو شد", `${client.internalCode} آرشیو شد.`);
+      await refresh();
+      return;
+    }
+    if (act === "unarchive"){
+      client.archived = false;
+      client.updatedAt = nowISO();
+      await dbPut(client);
+      toast("بازگردانی شد", `${client.internalCode} فعال شد.`);
+      await refresh();
+      return;
+    }
+
+    if (act === "open"){
+      toast("نمونه لینک پرونده", "بعداً به صفحه واقعی وصل می‌کنیم.");
+      window.open(`client_profile.html?client_id=${encodeURIComponent(client.id)}`, "_blank");
+      return;
+    }
+    if (act === "checklist"){
+      toast("نمونه لینک چک‌لیست", "بعداً به چک‌لیست واقعی وصل می‌کنیم.");
+      window.open(`checklist.html?client_id=${encodeURIComponent(client.id)}&type=${encodeURIComponent(client.requestType)}`, "_blank");
+      return;
+    }
+    if (act === "profile"){
+      toast("نمونه لینک اطلاعات فردی", "بعداً به فرم واقعی وصل می‌کنیم.");
+      window.open(`personal_info.html?client_id=${encodeURIComponent(client.id)}`, "_blank");
+      return;
+    }
+  });
+}
+
+async function refresh(){ allClients = await dbGetAll(); renderTable(); }
+
+async function saveClient(openAfter){
+  const data = getForm();
+  const err = validateForm(data);
+  if (err){ toast("خطا", err); return; }
+  const now = nowISO();
+
+  if (editingId){
+    const client = allClients.find(x => x.id === editingId);
+    if(!client){ toast("خطا", "کلاینت برای ویرایش پیدا نشد."); return; }
+    const updated = { ...client, ...data, tags: data.tags, dependents: data.dependents, updatedAt: now };
+    await dbPut(updated);
+    toast("ذخیره شد", `${updated.internalCode} بروزرسانی شد.`);
+    closeModal();
+    await refresh();
+    if(openAfter) window.open(`client_profile.html?client_id=${encodeURIComponent(updated.id)}`, "_blank");
+    return;
+  }
+
+  const seq = allClients.length + 1;
+  const client = { id: uuid(), internalCode: makeInternalCode(seq), createdAt: now, updatedAt: now, archived:false, ...data, tags: data.tags };
+  await dbPut(client);
+  toast("ثبت شد", `${client.internalCode} اضافه شد.`);
+  closeModal();
+  await refresh();
+  if(openAfter) window.open(`client_profile.html?client_id=${encodeURIComponent(client.id)}`, "_blank");
+}
+
+async function exportCSV(){
+  const rows = await dbGetAll();
+  downloadText(`clients_export_${new Date().getFullYear()}.csv`, toCsv(rows));
+  toast("خروجی آماده شد", "فایل CSV دانلود شد.");
+}
+async function resetDB(){
+  const ok = confirm("این کار تمام کلاینت‌ها را پاک می‌کند. مطمئنید؟");
+  if(!ok) return;
+  await dbDeleteAll();
+  toast("پاکسازی شد", "دیتابیس خالی شد.");
+  await refresh();
+}
+
+async function init(){
+  setupFilters();
+  setupFormSelects();
+  bindTableActions();
+
+  $("btnNew").addEventListener("click", () => openModal("new"));
+  $("btnClose").addEventListener("click", closeModal);
+  $("modalOverlay").addEventListener("click", (e) => { if(e.target.id === "modalOverlay") closeModal(); });
+
+  $("btnSave").addEventListener("click", () => saveClient(false));
+  $("btnSaveOpen").addEventListener("click", () => saveClient(true));
+
+  $("btnExport").addEventListener("click", exportCSV);
+  $("btnReset").addEventListener("click", resetDB);
+
+  $("btnLogout").addEventListener("click", async () => {
+    const { authLog } = window.ALG_AUTH || {};
+    const company = localStorage.getItem("alg_session_company") || "";
+    const username = localStorage.getItem("alg_session_username") || "";
+    const role = localStorage.getItem("alg_session_role") || "";
+    const token = localStorage.getItem("alg_session_token") || "";
+    try{
+      if(authLog) await authLog({ type:"LOGOUT", company, username, role, page:"clients_db.html", sessionToken: token, message:"logout_clicked" });
+    }catch(e){}
+
+    ["alg_session_company","alg_session_username","alg_session_role","alg_session_token","alg_session_loginAt","alg_session_expiresAt"]
+      .forEach(k => localStorage.removeItem(k));
+    window.location.href = "login.html";
+  });
+
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("modalOverlay").style.display === "flex") closeModal(); });
+
+  await refresh();
+}
+init();
+</script>
+</body>
+</html>
